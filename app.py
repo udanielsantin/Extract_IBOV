@@ -54,7 +54,7 @@ def lambda_handler(event, context):
     buffer.seek(0)
 
     s3 = boto3.client("s3")
-    bucket_name = "seu-bucket-aqui"
+    bucket_name = "daily-ibovespa-bucket"
     s3.upload_fileobj(buffer, bucket_name, s3_path)
 
     print(f"Arquivo enviado para s3://{bucket_name}/{s3_path}")
