@@ -17,6 +17,12 @@ def scrape_ibov() -> pd.DataFrame:
         )
         page.select_option("#selectPage", "120")
 
+        for _ in range(15):
+            rows = page.query_selector_all("table tbody tr")
+            if len(rows) == 120:
+                break
+            time.sleep(1)
+
         data = []
         for row in rows:
             cols = row.query_selector_all("td")
