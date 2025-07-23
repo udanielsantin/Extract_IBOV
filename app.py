@@ -6,7 +6,7 @@ from datetime import datetime
 import time
 
 
-def lambda_handler(event, context):
+def scrape_ibov() -> pd.DataFrame:
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
@@ -15,10 +15,8 @@ def lambda_handler(event, context):
         page.goto(
             "https://sistemaswebb3-listados.b3.com.br/indexPage/day/IBOV?language=pt-br"
         )
-
         page.select_option("#selectPage", "120")
 
-        rows = []
         for _ in range(15):
             rows = page.query_selector_all("table tbody tr")
             if len(rows) == 120:
@@ -36,30 +34,31 @@ def lambda_handler(event, context):
                 linha = cleaned
             data.append(linha)
 
-        df = pd.DataFrame(
-            data, columns=["Código", "Ação", "Tipo", "Qtde Teórica", "Part (%)"]
-        )
         browser.close()
 
-    hoje = datetime.now()
-    ano = hoje.strftime("%Y")
-    mes = hoje.strftime("%m")
-    dia = hoje.strftime("%d")
+    return pd.DataFrame(
+        data, columns=["Código", "Ação", "Tipo", "Qtde Teórica", "Part (%)"]
+    )
 
-    filename = f"ibov_{ano}{mes}{dia}.parquet"
-    s3_path = f"raw/ano={ano}/mes={mes}/dia={dia}/{filename}"
 
+def upload_parquet_to_s3(df: pd.DataFrame, bucket_name: str, s3_path: str) -> None:
     buffer = BytesIO()
     df.to_parquet(buffer, engine="fastparquet")
     buffer.seek(0)
-
-    s3 = boto3.client("s3")
-    bucket_name = "daily-ibovespa-bucket"
+    s3 = boto3.client("s3", region_name="sa-east-1")
     s3.upload_fileobj(buffer, bucket_name, s3_path)
 
-    print(f"Arquivo enviado para s3://{bucket_name}/{s3_path}")
 
-    return {
-        "statusCode": 200,
-        "body": f"Arquivo enviado para s3://{bucket_name}/{s3_path}",
-    }
+def main():
+    df = scrape_ibov()
+
+    hoje = datetime.now()
+    s3_path = (
+        f"raw/ano={hoje:%Y}/mes={hoje:%m}/dia={hoje:%d}/ibov_{hoje:%Y%m%d}.parquet"
+    )
+    bucket_name = "daily-ibovespa-bucket"
+    upload_parquet_to_s3(df, bucket_name, s3_path)
+
+
+if __name__ == "__main__":
+    main()
