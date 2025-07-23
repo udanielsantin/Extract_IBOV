@@ -1,12 +1,11 @@
 from playwright.sync_api import sync_playwright
 import pandas as pd
-import boto3
 from io import BytesIO
 from datetime import datetime
 import time
 
 
-def lambda_handler(event, context):
+def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"]
@@ -42,24 +41,10 @@ def lambda_handler(event, context):
         browser.close()
 
     hoje = datetime.now()
-    ano = hoje.strftime("%Y")
-    mes = hoje.strftime("%m")
-    dia = hoje.strftime("%d")
+    filename = f"testes/ibov_{hoje.strftime('%Y%m%d')}.parquet"
 
-    filename = f"ibov_{ano}{mes}{dia}.parquet"
-    s3_path = f"raw/ano={ano}/mes={mes}/dia={dia}/{filename}"
+    df.to_parquet(filename, engine="fastparquet")
 
-    buffer = BytesIO()
-    df.to_parquet(buffer, engine="fastparquet")
-    buffer.seek(0)
 
-    s3 = boto3.client("s3")
-    bucket_name = "daily-ibovespa-bucket"
-    s3.upload_fileobj(buffer, bucket_name, s3_path)
-
-    print(f"Arquivo enviado para s3://{bucket_name}/{s3_path}")
-
-    return {
-        "statusCode": 200,
-        "body": f"Arquivo enviado para s3://{bucket_name}/{s3_path}",
-    }
+if __name__ == "__main__":
+    main()
