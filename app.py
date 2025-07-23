@@ -53,9 +53,7 @@ def main():
     df = scrape_ibov()
 
     hoje = datetime.now()
-    s3_path = (
-        f"raw/ano={hoje:%Y}/mes={hoje:%m}/dia={hoje:%d}/ibov_{hoje:%Y%m%d}.parquet"
-    )
+    s3_path = f"raw/ibov_{hoje:%Y%m%d}.parquet"
     bucket_name = "daily-ibovespa-bucket"
     upload_parquet_to_s3(df, bucket_name, s3_path)
 
