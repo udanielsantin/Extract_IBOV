@@ -37,11 +37,11 @@ def scrape_ibov() -> pd.DataFrame:
         browser.close()
 
     df = pd.DataFrame(
-        data, columns=["Código", "Ação", "Tipo", "Qtde Teórica", "Part (%)"]
+        data, columns=["codigo", "acao", "tipo", "qtd_teorica", "participacao_perc"]
     )
-
+    
     # Adiciona a coluna Data com a data do dia da extração
-    df["Data"] = pd.to_datetime(datetime.now().date())
+    df["data"] = pd.to_datetime(datetime.now().date())
 
     return df
 
@@ -56,10 +56,6 @@ def upload_parquet_to_s3(df: pd.DataFrame, bucket_name: str, s3_path: str) -> No
 
 def main():
     df = scrape_ibov()
-
-    hoje = datetime.now()
-    # Adiciona coluna Data no formato datetime
-    df["Data"] = pd.to_datetime(hoje.date())
 
     s3_path = f"raw/year={hoje:%Y}/month={hoje:%m}/day={hoje:%d}/ibov.parquet"
     bucket_name = "daily-ibovespa-bucket"
