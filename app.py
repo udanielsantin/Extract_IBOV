@@ -56,7 +56,8 @@ def upload_parquet_to_s3(df: pd.DataFrame, bucket_name: str, s3_path: str) -> No
 
 def main():
     df = scrape_ibov()
-
+    
+    hoje = datetime.now()
     s3_path = f"raw/year={hoje:%Y}/month={hoje:%m}/day={hoje:%d}/ibov.parquet"
     bucket_name = "daily-ibovespa-bucket"
     upload_parquet_to_s3(df, bucket_name, s3_path)
