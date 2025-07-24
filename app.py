@@ -40,8 +40,9 @@ def scrape_ibov() -> pd.DataFrame:
         data, columns=["codigo", "acao", "tipo", "qtd_teorica", "participacao_perc"]
     )
     
-    df["qtd_teorica"] = df["qtd_teorica"].astype("int64")   
-    df["participacao_perc"] = df["participacao_perc"].astype("float64")
+    df["qtd_teorica"] = df["qtd_teorica"].str.replace('.', '', regex=False).astype('int64')
+    df["participacao_perc"] = df["participacao_perc"].str.replace(',', '.', regex=False).astype('float64')
+    
     df["data"] = pd.to_datetime(datetime.now()).floor('ms') 
     df["data"] = df["data"].astype("datetime64[ms]")
 
