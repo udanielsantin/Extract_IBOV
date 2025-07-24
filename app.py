@@ -40,8 +40,8 @@ def scrape_ibov() -> pd.DataFrame:
         data, columns=["codigo", "acao", "tipo", "qtd_teorica", "participacao_perc"]
     )
     
-    # Adiciona a coluna Data com a data do dia da extração
-    df["data"] = pd.to_datetime(datetime.now().date())
+    df["data"] = pd.to_datetime(datetime.now()).floor('ms') 
+    df["data"] = df["data"].astype("datetime64[ms]")
 
     return df
 
